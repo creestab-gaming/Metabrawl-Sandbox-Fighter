@@ -1,0 +1,16 @@
+jab= Vanilla Punch
+uLight= Vanilla Fist Pump
+fLight= Vanilla Arm Swipe
+dLight= Vanilla Stomp
+uStrong= Skyclap
+fStrong= This Is Sparta
+dStrong= The Splits
+nAir= Sex Kick
+uAir= Bicycle Kick
+fAir= Swat Away
+dAir= Sky Stomp
+bAir= Boneless
+nSpec= Twirl
+uSpec= Skycutter Leap
+fSpec= Bullrush
+dSpec= The Worm
