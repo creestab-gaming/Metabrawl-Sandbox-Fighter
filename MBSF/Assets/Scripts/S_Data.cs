@@ -60,8 +60,8 @@ public class S_Data
     //Customizable subtypes and static modifiers
     public enum SlotType
     {
-        ability,    //Static modifier
-        shield,
+        enchantment,    //Static modifier w/ an associated element
+        block,
         getupAtk,
         jab,
         uLight,
@@ -80,7 +80,21 @@ public class S_Data
         fSpec,
         dSpec
     }
-
+    //
+    public enum Element
+    {
+        Fire,
+        Water,
+        Earth
+    }
+    //
+    public enum Rarity
+    {
+        common,
+        uncommon,
+        rare
+    }
+    //
     public enum ColliderState
     {
         none,   //Inactive hitbox
@@ -88,6 +102,7 @@ public class S_Data
         hurt    //Hurtbox (player model collider)
     }
 
+    //Controller input mapping for action commands
     public struct ControlScheme
     {
         public int buffer;
@@ -133,24 +148,8 @@ public class S_Data
             return s;
         }
     }
-
-    public struct Move
-    {
-        public enum Rarity
-        {
-            common,
-            uncommon,
-            rare
-        }
-        public enum SpecialEffect
-        {
-            none,
-            heal,       //Remove damage per frame
-            counter,    //If hit when active, become invincible and set check to true
-            strudy,
-
-        }
-        public struct HBData
+    //
+    public struct MoveData
         {
             bool check;         //True if requires condition to be active, false otherwise
             int start;
@@ -193,18 +192,58 @@ public class S_Data
                 return s;
             }
         }
+    //
+    public struct PlayerModifiers
+    {
+        GameObject model;
+        float size;
+        float weight;
+        float moveSpeed;
+        float jumpHeight;
+        float healthPerSec;     //Amount of healing/damage sustained per second
+
+        public PlayerModifiers(bool _default)
+        {
+            model = null;
+            size = 1;
+            weight = 1;
+            moveSpeed = 1;
+            jumpHeight = 1;
+            healthPerSec = 0;
+        }
+        public PlayerModifiers(GameObject _model, float _size, float _weight, float _moveSpeed, float _jumpHeight, float _HPS)
+        {
+            model = _model;
+            size = _size;
+            weight = _weight;
+            moveSpeed = _moveSpeed;
+            jumpHeight = _jumpHeight;
+            healthPerSec = _HPS;
+        }
+
+        public override string ToString()
+        {
+            string s= 
+                "";
+
+            return s;
+        }
+    }
+    //
+    public struct Move
+    {
 
         public string name;
-        public SlotType type;
+        public SlotType type;       //Attackor block will change variable uses
         public Rarity rarity;
-        public int duration;        //Number of frames
+        public int duration;        //Number of frames if attack, startup frames if block
         public int landLag;         //Stun on land from aerial actions, 0 if grounded action
-        public int numHitboxes;
+        public int numHitboxes;     //Number of hitboxes possible during animation
         public HBData[] data;       //Data for each hitbox
         public SpecialEffect specType;        //Non-damaging actions
         public int specStart;
         public int specEnd;
-        public bool specCheck;           //Flag for hitbox associated with non-damaging action
+        public bool specCheck;      //Flag for hitbox associated with non-damaging action
 
         public Move(string _name, SlotType _type, Rarity _rarity, int _duration, int _landLag,
                     int _numHitboxes, HBData[] _data, SpecialEffect _specType, int _specStart, int _specEnd)
@@ -246,6 +285,56 @@ public class S_Data
             return s;
         }
     }
+    //
+    public struct Ability
+    {
+        public string name;
+        public SlotType type;       //Attackor block will change variable uses
+        public Rarity rarity;
+        public PlayerModifiers modifiers;       //Adjustments to core player attributes
+        public int numHitboxes;     //Number of hitboxes associated with ability
+        public HBData[] data;       //Data for each hitbox
+        public SpecialEffect specType;          //Non-damaging actions
+        public int specStart;
+        public int specEnd;
+        public bool specCheck;      //Flag for hitbox associated with non-damaging action
+
+        public Ability(string _name, Rarity _rarity, PlayerModifiers _modifiers, int _numHitboxes, HBData[] _data, SpecialEffect _specType, int _specStart, int _specEnd)
+        {
+            name = _name;
+            type = SlotType.ability;
+            rarity = _rarity;
+            modifiers = _modifiers;
+            numHitboxes = _numHitboxes;
+            data = _data;
+            specType = _specType;
+            specStart = _specStart;
+            specEnd = _specEnd;
+            specCheck = false;          //Starts false by default
+        }
+
+        public override string ToString()
+        {
+            int i = 1;
+
+            string s =
+                "Name: " + name + '\n' +
+                "Type: " + type + '\n' +
+                "Rarity: " + rarity + '\n' +
+                "# of Hitboxes: " + numHitboxes + '\n';
+            foreach (HBData hb in data)
+            {
+                s += "   Hitbox " + i + '\n' + hb.ToString();
+                i++;
+            }
+            s += "Special Effect? " + specType + '\n' +
+                "Effect Start Frame: " + specStart + '\n' +
+                "Effect End Frame: " + specEnd + '\n' +
+                "Effect Triggers Hitbox? " + specCheck + '\n';
+
+            return s;
+        }
+    }
 
     //Sets of moves
     public static List<Move[]> MOVES_ = new List<Move[]>
@@ -253,20 +342,20 @@ public class S_Data
         //ALPHA
         new Move[]
         {
-            new Move("Vanilla Punch", SlotType.jab, Move.Rarity.common, 10, 0, 1, new Move.HBData[]{
-                        new Move.HBData(2, 6, 4, 0, 5, 1, 0, 5, 1, false) },
-                    Move.SpecialEffect.none, 0, 0),
+            new Move("Vanilla Punch", SlotType.jab, Rarity.common, 10, 0, 1, new HBData[]{
+                        new HBData(2, 6, 4, 0, 5, 1, 0, 5, 1, false) },
+                    SpecialEffect.none, 0, 0),
 
-            new Move("Vanilla Fistpump", SlotType.uLight, Move.Rarity.common, 22, 0, 1, new Move.HBData[]{
-                        new Move.HBData(5, 11, 6, 0, 5, 3, 0, 8, 2, false) },
-                    Move.SpecialEffect.none, 0, 0)
+            new Move("Vanilla Fistpump", SlotType.uLight, Rarity.common, 22, 0, 1, new HBData[]{
+                        new HBData(5, 11, 6, 0, 5, 3, 0, 8, 2, false) },
+                    SpecialEffect.none, 0, 0)
         }
     };
-    public static List<Move[]> GetAllSets
+    public static List<Move[]> GetAllMoves
     {
         get { return MOVES_; }
     }
-    public static Move[] GetSet(int setNumber)
+    public static Move[] GetSetMoves (int setNumber)
     {
         return MOVES_[setNumber];
     }
@@ -284,7 +373,41 @@ public class S_Data
             }
         }
 
-        return new Move("ERROR", SlotType.ability, Move.Rarity.common, 0, 0, 0, new Move.HBData[]{}, Move.SpecialEffect.none, 0, 0);
+        return new Move("ERROR", SlotType.ability, Rarity.common, 0, 0, 0, new HBData[]{}, SpecialEffect.none, 0, 0);
+    }
+
+    //Sets of abilities
+    public static List<Ability[]> ABILITIES_ = new List<Ability[]>
+    {
+        //ALPHA
+        new Ability[]
+        {
+            new Ability("Vanilla", Rarity.common, new PlayerModifiers(false), 0, new HBData[]{ }, SpecialEffect.none, 0, 0)
+        }
+    };
+    public static List<Ability[]> GetAllAbilities
+    {
+        get { return ABILITIES_; }
+    }
+    public static Ability[] GetSetAbilities(int setNumber)
+    {
+        return ABILITIES_[setNumber];
+    }
+    public static Ability GetAbility(int setNumber, int abilityNumber)
+    {
+        return ABILITIES_[setNumber][abilityNumber];
+    }
+    public static Ability GetAbility(string abilityName)
+    {
+        foreach (Ability[] _set in ABILITIES_)
+        {
+            foreach (Ability _ability in _set)
+            {
+                if (_ability.name == abilityName) return _ability;
+            }
+        }
+
+        return new Ability("ERROR", Rarity.common, new PlayerModifiers(false), 0, new HBData[] { }, SpecialEffect.none, 0, 0);
     }
 
     public static ControlScheme ReadControls(string name)
@@ -326,6 +449,9 @@ public class S_Data
             Dictionary<SlotType, Move> _moves = new Dictionary<SlotType, Move>();
             StreamReader reader = new StreamReader("Assets/Text/" + name + ".txt");
 
+            _moves.Add(SlotType.ability, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _moves.Add(SlotType.block, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _moves.Add(SlotType.getupAtk, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
             _moves.Add(SlotType.jab, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
             _moves.Add(SlotType.uLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
             _moves.Add(SlotType.fLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
