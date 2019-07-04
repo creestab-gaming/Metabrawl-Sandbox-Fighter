@@ -6,6 +6,7 @@ using UnityEngine;
 public class S_Data
 {
     //Debug Flags
+    public static bool GENERAL_DEBUG = false;
     public static bool HIT_DATA = false;
 
     //Input command supertypes
@@ -24,8 +25,9 @@ public class S_Data
     //Command subtypes
     public enum ActionType
     {
+        none,
         jump,
-        shield,
+        block,
         dodge,
         airdodge,
         tech,
@@ -84,6 +86,7 @@ public class S_Data
     //
     public enum Element
     {
+        Null,
         None,
         Fire,
         Water,
@@ -107,20 +110,29 @@ public class S_Data
     //
     public struct PlayerState
     {
-        public int number;
-        public GameObject model;
-        public Color color;
-        public int size;
-        public int weight;
-        public float runSpeed;
-        public float gJumpSpeed;
-        public float aJumpSpeed;
-        public float fallSpeed;
+        public int number;      //# associated with player port
+        public GameObject rig;//Game asset representing player character
+        public Color color;     //Color/skin of player character
+        public Element element; //Player element from enchantment of modification, determines possible moves
+        public int size;        //Scaling of player character and its hit/hurtboxes
+        public int weight;      //Character weight, influences jump heigh, fallspeed, knockback distance, ext
+        public float runSpeed;  //How fast the player moves on the ground
+        public float gJumpSpeed;//How fast/high the player jumps off the ground
+        public float aJumpSpeed;//How fast/high the player jumps in the air (double jump)
+        public float aDrift;     //Modifier for aerial drift
+        public float fallSpeed; //How fast the player falls in the air before weight is applied
         public int orientation; //1 for facing right, -1 for facing left.
-        public int jumps;
-        public int maxJumps;
+        public int jumps;       //How many jumps the player currently has
+        public int maxJumps;    //The number of jumps restored when landed on stage.
         public float damage;    //Amount of damage currently sustained
         public float dps;       //Change in sustained damage per second
+        public int stun;        //Number of frames of stun left, reduces by 1 every frame
+        public bool actable;    //Is the player able to perform normal moves
+        public bool onStage;    //Is the player on stage
+        public bool onWallLeft; //Is the player touching the left of the stage
+        public bool onWallRight;//Is the player touching the right of the stage
+        public bool airborne;   //Is the player in the air
+        public bool fastfall;   //Is the player fastfalling
     }
     //Controller input mapping for action commands
     public struct ControlScheme
@@ -310,11 +322,13 @@ public class S_Data
         public int time;            //How many frames the modification is active for. Ticks down once per frame via itterating through an array of all modifiers on a player. If -1, lasts indefinitely.
         public GameObject model;
         public Color color;
+        public Element element;
         public int size;
         public int weight;
         public float runSpeed;
         public float gJumpSpeed;
         public float aJumpSpeed;
+        public float aDrift;
         public float fallSpeed;
         public int maxJumps;
         public float dps;           //Amount of healing/damage sustained per second
@@ -326,28 +340,32 @@ public class S_Data
 
             model = null;
             color = Color.gray;
+            element = Element.Null;
             size = 0;
             weight = 0;
             runSpeed = 0;
             gJumpSpeed = 0;
             aJumpSpeed = 0;
+            aDrift = 0;
             fallSpeed = 0;
             maxJumps = 0;
             dps = 0;
         }
-        public PlayerModifier(int _source, int _time, GameObject _model, Color _color, int _size, int _weight, 
-                                float _runSpeed, float _gJumpSpeed, float _aJumpSpeed, float _fallSpeed, int _maxJumps, float _dps)
+        public PlayerModifier(int _source, int _time, GameObject _model, Color _color, Element _element, int _size, int _weight, 
+                                float _runSpeed, float _gJumpSpeed, float _aJumpSpeed, float _aDrift, float _fallSpeed, int _maxJumps, float _dps)
         {
             source = _source;
             time = _time;
 
             model = _model;
             color = _color;
+            element = _element;
             size = _size;
             weight = _weight;
             runSpeed = _runSpeed;
             gJumpSpeed = _gJumpSpeed;
             aJumpSpeed = _aJumpSpeed;
+            aDrift = _aDrift;
             fallSpeed = _fallSpeed;
             maxJumps = _maxJumps;
             dps = _dps;
