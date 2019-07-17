@@ -1,4 +1,5 @@
-ability= Vanilla
+model= Default
+enchantment= Null
 block= Vanilla Shield
 getupAtk = Vanilla Kickup
 jab= Vanilla Punch

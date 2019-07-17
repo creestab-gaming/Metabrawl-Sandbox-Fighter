@@ -17,12 +17,15 @@ public class S_Player : MonoBehaviour
 {
     [SerializeField] Animator anim;                 //The animator for this player
     [SerializeField] List<PlayerSensorData> sensors;//All hitbox sensors
-    [SerializeField] TextAsset movesetFile;         //Text file containing slot type references
-    [SerializeField] TextAsset controlsFile;        //Text file containing input bindings
+    [SerializeField] public int port;  //Outlet of which the player is being controlled, determines player #
+    [SerializeField] public TextAsset characterFile;    //Text file containing player/character data
+    [SerializeField] public TextAsset controlsFile;     //Text file containing input bindings
     private Rigidbody rb;       //Rigid body of player rig
     private BoxCollider box;    //Box collider associated with player
 
-    public Dictionary<SlotType, Move> moveset;      //Keymap for each slot type and a bound action
+    public Model model;
+    public Enchantment enchantment;
+    public Dictionary<SlotType, Move> moveset;        //Keymap for each slot type and a bound action
     public ControlScheme controls;                  //A struct of all inputs and a bound action
     public PlayerState startState;                  //Player variables on spawn
     public PlayerState curState;                    //Player variables accounting for state modifiers
@@ -39,9 +42,20 @@ public class S_Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Spawn();
+        moveset = new Dictionary<SlotType, Move>();
+        startState = new PlayerState();
 
+        if(port > 0)
+        {
+            S_Player _temp = ReadCharacter(characterFile.name);
+            model = _temp.model;
+            startState = model.modifiers;
+            enchantment = _temp.enchantment;
+            moveset = _temp.moveset;
+            controls = ReadControls(controlsFile.name);
 
+            Spawn();
+        }
     }
 
     // Update is called once per frame
@@ -114,11 +128,8 @@ public class S_Player : MonoBehaviour
                     else if (input == ActionType.fSpec) { anim.Play("ForwardSpecial"); }
                     else if (input == ActionType.uSpec) { anim.Play("UpSpecial"); }
                     else if (input == ActionType.dSpec) { anim.Play("DownSpecial"); }
-                    else if (input == ActionType.airdodge
-                            || input == ActionType.fRoll
-                            || input == ActionType.bRoll
-                            || input == ActionType.tech
-                            || input == ActionType.techHop) { anim.Play("AirDodge"); }
+                    else if (input == ActionType.floatDodge) { anim.Play("AirDodge"); }
+                    else if (input == ActionType.fallDodge) { anim.Play("FallDodge"); }
                 }
                 else
                 {
@@ -135,7 +146,8 @@ public class S_Player : MonoBehaviour
                     else if (input == ActionType.fSpec) { anim.Play("ForwardSpecial"); }
                     else if (input == ActionType.uSpec) { anim.Play("UpSpecial"); }
                     else if (input == ActionType.dSpec) { anim.Play("DownSpecial"); }
-                    else if (input == ActionType.dodge) { anim.Play("SpotDodge"); }
+                    else if (input == ActionType.floatDodge) { anim.Play("AirDodge"); }
+                    else if (input == ActionType.fallDodge) { anim.Play("SpotDodge"); }
                     else if (input == ActionType.fRoll) { anim.Play("ForwardRoll"); }
                     else if (input == ActionType.bRoll) { anim.Play("BackwardRoll"); }
                     else if (input == ActionType.grab) { anim.Play("Grabbing"); }
@@ -155,7 +167,7 @@ public class S_Player : MonoBehaviour
                     if (!curState.fastfall)
                     {
                         //If player is trying to fastfall while already falling but not fastfalling
-                        if ((Input.GetKeyDown(controls.down) || Input.GetAxis(controls.moveVert) < -.7) && rb.velocity.y < 0 && rb.velocity.y > -(curState.fallSpeed + (curState.weight * 2)))
+                        if ((Input.GetKeyDown(controls.down) || Input.GetAxis(controls.mVert) < -.7) && rb.velocity.y < 0 && rb.velocity.y > -(curState.fallSpeed + (curState.weight * 2)))
                         {
                             curState.fastfall = true;   //Player is now fastfalling
                             mVert = -(curState.fallSpeed + (curState.weight * 2));  //Applied vertical force modified by fastfall mod
@@ -177,13 +189,13 @@ public class S_Player : MonoBehaviour
                     //Analog Movement
                     else
                     {
-                        if (Input.GetAxis(controls.moveHorz) > 0)       //Inputting right
+                        if (Input.GetAxis(controls.mHorz) > 0)       //Inputting right
                         {
-                            gameObject.transform.position -= gameObject.transform.right * curState.orientation * curState.runSpeed * Input.GetAxis(controls.moveHorz);
+                            gameObject.transform.position -= gameObject.transform.right * curState.orientation * curState.runSpeed * Input.GetAxis(controls.mHorz);
                         }
-                        else if (Input.GetAxis(controls.moveHorz) < 0)  //Inputting left
+                        else if (Input.GetAxis(controls.mHorz) < 0)  //Inputting left
                         {
-                            gameObject.transform.position -= gameObject.transform.right * curState.orientation * curState.runSpeed * Input.GetAxis(controls.moveHorz);
+                            gameObject.transform.position -= gameObject.transform.right * curState.orientation * curState.runSpeed * Input.GetAxis(controls.mHorz);
                         }
                     }
                 }
@@ -233,17 +245,17 @@ public class S_Player : MonoBehaviour
                         gameObject.transform.position -= gameObject.transform.right * curState.runSpeed;    //Move the player
                     }
                     //Analog Movement
-                    else if (Mathf.Abs(Input.GetAxis(controls.moveHorz)) > Mathf.Abs(Input.GetAxis(controls.moveVert))) //Move if horizontal input is greater than vertical input
+                    else if (Mathf.Abs(Input.GetAxis(controls.mHorz)) > Mathf.Abs(Input.GetAxis(controls.mVert))) //Move if horizontal input is greater than vertical input
                     {
-                        if (Input.GetAxis(controls.moveHorz) > 0) { curState.orientation = 1; }
+                        if (Input.GetAxis(controls.mHorz) > 0) { curState.orientation = 1; }
                         else { curState.orientation = -1; }
 
                         if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Run")) anim.Play("Run");
-                        anim.speed = Mathf.Abs(Input.GetAxis(controls.moveHorz));
+                        anim.speed = Mathf.Abs(Input.GetAxis(controls.mHorz));
 
-                        gameObject.transform.position -= gameObject.transform.right * curState.runSpeed * Mathf.Abs(Input.GetAxis(controls.moveHorz));
+                        gameObject.transform.position -= gameObject.transform.right * curState.runSpeed * Mathf.Abs(Input.GetAxis(controls.mHorz));
                     }
-                    else if (Input.GetAxis(controls.moveVert) < -.5)
+                    else if (Input.GetAxis(controls.mVert) < -.5)
                     {
                         //Crouch
                         if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Crouch")) anim.Play("Crouch");
@@ -283,13 +295,13 @@ public class S_Player : MonoBehaviour
     //Instantiate the player
     public void Spawn()
     {
-        Init(movesetFile.name, controlsFile.name);
-    }
-    //Read text files for controls and moves
-    public void Init(string _moveset, string _controls)
-    {
-        moveset = ReadMoves(_moveset);
-        controls = ReadControls(_controls);
+        rb = gameObject.GetComponent<Rigidbody>();
+        box = gameObject.GetComponent<BoxCollider>();
+
+        curState = startState;
+        mVert = 0;
+        input = ActionType.none;
+        anim.Play("Airborne");
     }
 
     public void Jump(char type)
@@ -324,6 +336,11 @@ public class S_Player : MonoBehaviour
             gameObject.transform.Translate(new Vector3(0, .5f, 0), Space.Self);
             anim.Play("Airborne");
         }
+    }
+
+    public void SetInput(ActionType _input)
+    {
+        input = _input;
     }
 
     //Remove buffered input
@@ -377,5 +394,11 @@ public class S_Player : MonoBehaviour
     public void ClearMods()
     {
         stateMods = new List<PlayerModifier>();
+    }
+
+    //Turns the player around
+    public void FlipOrientation()
+    {
+        curState.orientation = -curState.orientation;
     }
 }
