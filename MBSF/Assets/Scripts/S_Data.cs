@@ -65,24 +65,7 @@ public class S_Data
     {
         model,          //The character model as well as modifiers like size and weight
         enchantment,    //Static modifier w/ an associated element
-        block,
-        getupAtk,
-        jab,
-        uLight,
-        fLight,
-        dLight,
-        uStrong,
-        fStrong,
-        dStrong,
-        nAir,
-        uAir,
-        fAir,
-        dAir,
-        bAir,
-        nSpec,
-        uSpec,
-        fSpec,
-        dSpec
+        move
     }
     //
     public enum Element
@@ -137,8 +120,8 @@ public class S_Data
 
         public PlayerState(bool _default)
         {
-            rig = GameObject.Find("P_Default");
-            color = Color.gray;
+            rig = GameObject.Find("M_Default");
+            color = Color.grey;
             element = Element.None;
             size = 5;
             weight = 5;
@@ -147,7 +130,7 @@ public class S_Data
             aJumpSpeed = 5;
             aDrift = 5;
             fallSpeed = 5;
-            orientation = 1;
+            orientation = 0;
             jumps = 0;
             maxJumps = 2;
             damage = 0;
@@ -162,8 +145,36 @@ public class S_Data
             fastfall = false;
         }
 
-        public PlayerState(GameObject _rig, Color _color, Element _element, int _size, int _weight, float _runSpeed, 
-                        float _gJumpSpeed, float _aJumpSpeed, float _aDrift, float _fallSpeed, int _orientation, int _maxJumps, 
+        public PlayerState(GameObject _rig, int _size, int _weight, float _runSpeed, float _gJumpSpeed, float _aJumpSpeed,
+                float _aDrift, float _fallSpeed, int _maxJumps, float _damage, float _dps, int _stun, bool _actable, bool _fastfall)
+        {
+            rig = _rig;
+            color = Color.grey;     //English spelling indicates null
+            element = Element.None;
+            size = _size;
+            weight = _weight;
+            runSpeed = _runSpeed;
+            gJumpSpeed = _gJumpSpeed;
+            aJumpSpeed = _aJumpSpeed;
+            aDrift = _aDrift;
+            fallSpeed = _fallSpeed;
+            orientation = 0;
+            maxJumps = _maxJumps;
+            jumps = maxJumps;
+            damage = _damage;
+            dps = _dps;
+            stun = _stun;
+            holding = false;
+            actable = _actable;
+            onStage = false;
+            onWallLeft = false;
+            onWallRight = false;
+            airborne = true;
+            fastfall = _fastfall;
+        }
+
+        public PlayerState(GameObject _rig, Color _color, Element _element, int _size, int _weight, float _runSpeed,
+                        float _gJumpSpeed, float _aJumpSpeed, float _aDrift, float _fallSpeed, int _orientation, int _maxJumps,
                         float _damage, float _dps, int _stun, bool _actable, bool _fastfall)
         {
             rig = _rig;
@@ -243,7 +254,7 @@ public class S_Data
         public string name;
         public string code;
         public Rarity rarity;
-        public SlotType slot;
+        public ActionType slot;
         public Element element;
         public int duration;        //Number of frames if attack, startup frames if block
         public HBData[] hitbox;     //Individual hitbox data
@@ -256,7 +267,7 @@ public class S_Data
         public int lastUsed;        //the frame # this move was last used successfully
         public int charge;          //a number from 0 to 100 for moves that use charge
 
-        public Move(string _name, string _code, Rarity _rarity, SlotType _slot, Element _ele, int _dur,
+        public Move(string _name, string _code, Rarity _rarity, ActionType _slot, Element _ele, int _dur,
                     HBData[] _hb, int _lLag, int _aStr, int[][] _aF, int[][] _iF, int[][] _cF)
         {
             name = _name;
@@ -303,20 +314,22 @@ public class S_Data
     //
     public struct HBData
     {
-        bool check;         //True if requires checkCon satisfied to be active, false otherwise
-        int start;
-        int end;
-        int damage;
-        int priority;       //If 2 hitboxes from different players collide, the one with the lower priority will be disabled
-        int hitstunBase;
-        int hitstunGrowth;
-        int knockbackAngle; //In relation to the collider vector w/ z-value held to 0
-        int knockbackBase;
-        int knockbackGrowth;
+        public bool check;          //True if requires checkCon satisfied to be active, false otherwise
+        public int sensor;          //The sensor associated with this hitbox
+        public int start;           //Frame this hitbox becomes active
+        public int end;             //Frame this hitbox becomes disabled
+        public int damage;
+        public int priority;        //If 2 hitboxes from different players collide, the one with the lower priority will be disabled
+        public int hitstunBase;
+        public int hitstunGrowth;
+        public int knockbackAngle;  //In relation to the collider vector w/ z-value held to 0
+        public int knockbackBase;
+        public int knockbackGrowth;
 
-        public HBData(int _start, int _end, int _damage, int _priority, int _hsBase, int _hsGrowth, int _kbAngle, int _kbBase, int _kbGrowth, bool _check)
+        public HBData(int _start, int _sensor, int _end, int _damage, int _priority, int _hsBase, int _hsGrowth, int _kbAngle, int _kbBase, int _kbGrowth, bool _check)
         {
             start = _start;
+            sensor = _sensor;
             end = _end;
             damage = _damage;
             priority = _priority;
@@ -420,7 +433,7 @@ public class S_Data
             time = -1;
 
             model = null;
-            color = Color.gray;
+            color = Color.grey;     //English spelling indicates null
             element = Element.Null;
             size = 0;
             weight = 0;
@@ -432,6 +445,27 @@ public class S_Data
             maxJumps = 0;
             dps = 0;
         }
+
+        public PlayerModifier(Element _element, int _size, int _weight,
+                        float _runSpeed, float _gJumpSpeed, float _aJumpSpeed, float _aDrift, float _fallSpeed, int _maxJumps, float _dps)
+        {
+            source = 0;
+            time = -1;
+
+            model = null;
+            color = Color.grey;
+            element = _element;
+            size = _size;
+            weight = _weight;
+            runSpeed = _runSpeed;
+            gJumpSpeed = _gJumpSpeed;
+            aJumpSpeed = _aJumpSpeed;
+            aDrift = _aDrift;
+            fallSpeed = _fallSpeed;
+            maxJumps = _maxJumps;
+            dps = _dps;
+        }
+
         public PlayerModifier(int _source, int _time, GameObject _model, Color _color, Element _element, int _size, int _weight,
                                 float _runSpeed, float _gJumpSpeed, float _aJumpSpeed, float _aDrift, float _fallSpeed, int _maxJumps, float _dps)
         {
@@ -468,11 +502,18 @@ public class S_Data
     }
 
     //Sets of moves
-    public static List<Move[]> MOVES_ = new List<Move[]>
+    public static Move[][] MOVES_ = new Move[][]
     {
+        //Null set/move array
+        new Move[]{new Move("NULL","0000",Rarity.common,ActionType.none,Element.Null,0,null,0,0,null,null,null)},
 
+        //Alpha
+        new Move[]
+        {
+            new Move("Vanilla Punch","0100",Rarity.common,ActionType.jab,Element.None,11,new HBData[]{new HBData()},0,2,null,null,null)
+        }
     };
-    public static List<Move[]> GetAllMoves
+    public static Move[][] GetAllMoves
     {
         get { return MOVES_; }
     }
@@ -490,23 +531,32 @@ public class S_Data
     }
     public static Move SearchMove(string moveName)
     {
-        foreach (Move[] _set in MOVES_)
+        for (int _set = 0; _set < MOVES_.Length; _set++)
         {
-            foreach (Move _move in _set)
+            for (int _move = 0; _move < MOVES_[_set].Length; _move++)
             {
-                if (_move.name == moveName) return _move;
+                if (MODELS_[_set][_move].name == moveName) return MOVES_[_set][_move];
             }
         }
 
-        return new Move("ERROR", "-1", Rarity.common, SlotType.enchantment, Element.None, 0, new HBData[] { }, 0, 0, new int[][] { }, new int[][] { }, new int[][] { });
+        //Not found, return null
+        return MOVES_[0][0];
     }
 
     //Sets of models
-    public static List<Model[]> MODELS_ = new List<Model[]>
+    public static Model[][] MODELS_ = new Model[][]
     {
-
+        //Null set/model array
+        new Model[]{new Model("NULL", "0000", Rarity.common, new PlayerState(false))},
+    
+        //Alpha
+        new Model[]
+        {
+            new Model("Default", "0100", Rarity.common, new PlayerState(GameObject.Find("M_Default"),5,5,5,5,5,5,5,2,0,0,0,true,false))
+        }
     };
-    public static List<Model[]> GetAllModels
+       
+    public static Model[][] GetAllModels
     {
         get { return MODELS_; }
     }
@@ -524,23 +574,31 @@ public class S_Data
     }
     public static Model SearchModel(string modelName)
     {
-        foreach (Model[] _set in MODELS_)
+        for (int _set = 0; _set < MODELS_.Length; _set++)
         {
-            foreach (Model _model in _set)
+            for (int _model = 0; _model < MODELS_[_set].Length; _model++)
             {
-                if (_model.name == modelName) return _model;
+                if (MODELS_[_set][_model].name == modelName) return MODELS_[_set][_model];
             }
         }
-
-        return new Model("ERROR", "-1", Rarity.common, new PlayerState());
+        
+        //Not found, return null
+        return MODELS_[0][0];
     }
 
     //Sets of enchantments
-    public static List<Enchantment[]> ENCHANTS_ = new List<Enchantment[]>
+    public static Enchantment[][] ENCHANTS_ = new Enchantment[][]
     {
+        //Null set/enchant array
+        new Enchantment[]{new Enchantment("NULL", "0000", Element.Null, Rarity.common, new PlayerModifier(false))},
 
+        //Alpha
+        new Enchantment[]
+        {
+            new Enchantment("Default", "0100", Element.None, Rarity.common, new PlayerModifier(Element.None,0,0,0,0,0,0,0,0,0)),
+        }
     };
-    public static List<Enchantment[]> GetAllEnchantments
+    public static Enchantment[][] GetAllEnchantments
     {
         get { return ENCHANTS_; }
     }
@@ -558,36 +616,32 @@ public class S_Data
     }
     public static Enchantment SearchEnchantment(string enchantmentName)
     {
-        foreach (Enchantment[] _set in ENCHANTS_)
+        for (int _set = 0; _set < ENCHANTS_.Length; _set++)
         {
-            foreach (Enchantment _Enchantment in _set)
+            for (int _ench = 0; _ench < ENCHANTS_[_set].Length; _ench++)
             {
-                if (_Enchantment.name == enchantmentName) return _Enchantment;
+                if (ENCHANTS_[_set][_ench].name == enchantmentName) return ENCHANTS_[_set][_ench];
             }
         }
 
-        return new Enchantment("ERROR", "-1", Element.Null, Rarity.common, new PlayerModifier());
+        //Not found, return null
+        return ENCHANTS_[0][0];
     }
 
     //List of all projectile object references for instantiation
-    public static List<GameObject> PROJECTILES_ = new List<GameObject>
+    public static GameObject[] PROJECTILES_ = new GameObject[]
     {
 
     };
-
-    //Complex processes for certain moves, returns wether a moves check condition is satisfied
-    /*public static bool MoveEffect(Move move, ref S_Player user, ref S_Player[] opponent, ref S_Player[] ally)
+ 
+    //Complex processes for certain moves
+    public static void MoveEffects(int _move)
     {
-        if (move.name == )
-        {
-
-        }
-        else if (move.name == )
-        {
-
-        }
-        else return false;
-    }*/
+            switch(_move)
+            {
+                
+            }
+    }
 
     //Instantiates a character & moveset from file
     public static S_Player ReadCharacter(string _name)
@@ -600,24 +654,23 @@ public class S_Data
             //Moveset
             _char.model = GetModel(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
             _char.enchantment = GetEnchantment(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
-            _char.moveset.Add(SlotType.block, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.getupAtk, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.jab, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.uLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.fLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.dLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.uStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.fStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.dStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.nAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.uAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.fAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.dAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.bAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.nSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.uSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.fSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(SlotType.dSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.block, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.jab, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.nAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.bAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.nSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
 
             return _char;
         }
@@ -658,11 +711,5 @@ public class S_Data
 
     public static void CloseGame() { Application.Quit(); }
 
-    public static void MoveEffects(int _move)
-    {
-            switch(_move)
-            {
-                
-            }
-    }
+
 }

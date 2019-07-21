@@ -7,7 +7,7 @@ using static S_Data;
 public class PlayerSensorData
 {
     [SerializeField] S_Sensor[] _sensors;   //Hitbox Sensors
-    [SerializeField] ActionType _instance;   //The action that uses the sensor
+    [SerializeField] ActionType _instance;  //The action that uses the sensor
 
     public S_Sensor[] GetSensors { get { return _sensors; } }
     public ActionType GetInstance { get { return _instance; } }
@@ -25,7 +25,7 @@ public class S_Player : MonoBehaviour
 
     public Model model;
     public Enchantment enchantment;
-    public Dictionary<SlotType, Move> moveset;        //Keymap for each slot type and a bound action
+    public Dictionary<ActionType, Move> moveset;        //Keymap for each slot type and a bound action
     public ControlScheme controls;                  //A struct of all inputs and a bound action
     public PlayerState startState;                  //Player variables on spawn
     public PlayerState curState;                    //Player variables accounting for state modifiers
@@ -42,7 +42,7 @@ public class S_Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        moveset = new Dictionary<SlotType, Move>();
+        moveset = new Dictionary<ActionType, Move>();
         startState = new PlayerState();
 
         if(port > 0)
@@ -401,4 +401,7 @@ public class S_Player : MonoBehaviour
     {
         curState.orientation = -curState.orientation;
     }
+
+    public List<PlayerSensorData> GetSensors
+    { get { return sensors; } }
 }

@@ -1,7 +1,6 @@
 model= Default
-enchantment= Null
+enchantment= Default
 block= Vanilla Shield
-getupAtk = Vanilla Kickup
 jab= Vanilla Punch
 uLight= Vanilla Fist Pump
 fLight= Vanilla Arm Swipe
