@@ -5,7 +5,7 @@ using static S_Data;
 
 public class S_Sensor : MonoBehaviour
 {
-    [SerializeField] GameObject player;
+    //[SerializeField] GameObject player;
     [SerializeField] ColliderState type;
     [SerializeField] Move moveData;
     [SerializeField] int hitNum;
@@ -27,7 +27,7 @@ public class S_Sensor : MonoBehaviour
         transform.localRotation = rot;
     }
 
-    public GameObject getPlayer { get { return player; } }
+    //public GameObject getPlayer { get { return player; } }
     public ColliderState getColliderState
     {
         get { return type; }

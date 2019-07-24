@@ -399,8 +399,6 @@ public class S_Data
 
         public override string ToString()
         {
-            int i = 1;
-
             string s =
                 "Name: " + name + '\n' +
                 "Type: " + type + '\n' +
