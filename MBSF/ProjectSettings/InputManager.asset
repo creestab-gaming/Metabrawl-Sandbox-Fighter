@@ -167,7 +167,7 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: VirtualKB_RHorz
-    descriptiveName: 
+    descriptiveName: VirtualKB_RHorz
     descriptiveNegativeName: 
     negativeButton: left
     positiveButton: right
@@ -183,7 +183,7 @@ InputManager:
     joyNum: 0
   - serializedVersion: 3
     m_Name: VirtualKB_RVert
-    descriptiveName: 
+    descriptiveName: VirtualKB_RVert
     descriptiveNegativeName: 
     negativeButton: down
     positiveButton: up
@@ -195,5 +195,5 @@ InputManager:
     snap: 0
     invert: 0
     type: 0
-    axis: 2
+    axis: 1
     joyNum: 0

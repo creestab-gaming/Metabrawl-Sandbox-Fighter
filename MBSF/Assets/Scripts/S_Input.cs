@@ -26,6 +26,9 @@ public class S_Input : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (controls.cHorz == null || controls.cVert == null) ResetPlayer();
+        if (input != ActionType.none) TickBuffer();
+
         //Check axis possitions
         if (GENERAL_DEBUG && Input.GetKeyDown(controls.alt))
         {
@@ -37,14 +40,15 @@ public class S_Input : MonoBehaviour
             Debug.Log("   Left Analog Vertical: " + Input.GetAxis("P2_LVert"));
             Debug.Log("   Right Analog Horizontal: " + Input.GetAxis("P2_RHorz"));
             Debug.Log("   Right Analog Vertical: " + Input.GetAxis("P2_RVert"));
-        }
 
-        if (input != ActionType.none) TickBuffer();
+            Debug.Log("cHorz: " + controls.cHorz.ToString() + "    cVert: " + controls.cVert.ToString());
+        }
 
         //Placeholders to identify when the buffer receives a new input
         _inStart = input;
         _bufStart = fBuf;
 
+        if (GENERAL_DEBUG) {  } //Check right stick input of this player
         //Light attack input
         if (Input.GetKeyDown(controls.light))
         {
@@ -232,5 +236,6 @@ public class S_Input : MonoBehaviour
     {
         player = gameObject.GetComponent<S_Player>();
         controls = player.controls;
+        if (GENERAL_DEBUG) { Debug.Log(controls.cStickUse.ToString()); }
     }
 }

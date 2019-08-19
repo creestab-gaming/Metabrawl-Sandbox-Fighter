@@ -6,7 +6,7 @@ using UnityEngine;
 public class S_Data
 {
     //Debug Flags
-    public static bool GENERAL_DEBUG = false;
+    public static bool GENERAL_DEBUG = true;
     public static bool HIT_DATA = false;
 
     //Input command supertypes
@@ -91,6 +91,13 @@ public class S_Data
         hurt    //Hurtbox (player model collider)
     }
 
+    //
+    public struct Player
+    {
+        public Model model;
+        public Enchantment enchantment;
+        public Dictionary<ActionType, Move> moveset;
+    }
     //
     public struct PlayerState
     {
@@ -521,7 +528,7 @@ public class S_Data
     }
     public static Move GetMove(string moveCode)
     {
-        return MOVES_[int.Parse("0x" + moveCode.Substring(0, 2))][int.Parse("0x" + moveCode.Substring(2))];
+        return MOVES_[System.Convert.ToInt32(moveCode.Substring(0, 2), 16)][System.Convert.ToInt32(moveCode.Substring(2), 16)];
     }
     public static Move GetMove(int setNumber, int moveNumber)
     {
@@ -564,7 +571,7 @@ public class S_Data
     }
     public static Model GetModel(string modelCode)
     {
-        return MODELS_[int.Parse("0x" + modelCode.Substring(0, 2))][int.Parse("0x" + modelCode.Substring(2))];
+        return MODELS_[System.Convert.ToInt32(modelCode.Substring(0, 2), 16)][System.Convert.ToInt32(modelCode.Substring(2), 16)];
     }
     public static Model GetModel(int setNumber, int modelNumber)
     {
@@ -606,7 +613,7 @@ public class S_Data
     }
     public static Enchantment GetEnchantment(string enchantmentCode)
     {
-        return ENCHANTS_[int.Parse("0x" + enchantmentCode.Substring(0, 2))][int.Parse("0x" + enchantmentCode.Substring(2))];
+        return ENCHANTS_[System.Convert.ToInt32(enchantmentCode.Substring(0, 2), 16)][System.Convert.ToInt32(enchantmentCode.Substring(2), 16)];
     }
     public static Enchantment GetEnchantment(int setNumber, int enchantmentNumber)
     {
@@ -642,33 +649,34 @@ public class S_Data
     }
 
     //Instantiates a character & moveset from file
-    public static S_Player ReadCharacter(string _name)
+    public static Player ReadCharacter(string _name)
     {
         if (File.Exists("Assets/Text/" + _name + ".txt"))
         {
             StreamReader reader = new StreamReader("Assets/Text/" + _name + ".txt");
-            S_Player _char = new S_Player(); _char.port = 0;
+            Player _char = new Player();
+            _char.moveset = new Dictionary<ActionType, Move>();
 
             //Moveset
-            _char.model = GetModel(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
-            _char.enchantment = GetEnchantment(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
-            _char.moveset.Add(ActionType.block, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.jab, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.uLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.fLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.dLight, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.uStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.fStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.dStrong, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.nAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.uAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.fAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.dAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.bAir, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.nSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.uSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.fSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
-            _char.moveset.Add(ActionType.dSpec, GetMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.model = SearchModel(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
+            _char.enchantment = SearchEnchantment(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
+            _char.moveset.Add(ActionType.block, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.jab, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uLight, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fLight, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dLight, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uStrong, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fStrong, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dStrong, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.nAir, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uAir, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fAir, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dAir, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.bAir, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.nSpec, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.uSpec, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.fSpec, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
+            _char.moveset.Add(ActionType.dSpec, SearchMove(reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]));
 
             return _char;
         }
@@ -701,6 +709,8 @@ public class S_Data
             _controls.jump = (KeyCode)System.Enum.Parse(typeof(KeyCode), reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
             _controls.alt = (KeyCode)System.Enum.Parse(typeof(KeyCode), reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
             _controls.pause = (KeyCode)System.Enum.Parse(typeof(KeyCode), reader.ReadLine().Split(new char[] { ' ' }, 2, System.StringSplitOptions.None)[1]);
+
+            if (GENERAL_DEBUG) { Debug.Log(_controls.cHorz.ToString()); Debug.Log(_controls.cVert.ToString()); }
 
             return _controls;
         }

@@ -45,25 +45,22 @@ public class S_Player : MonoBehaviour
         moveset = new Dictionary<ActionType, Move>();
         startState = new PlayerState();
 
-        if(port > 0)
-        {
-            S_Player _temp = ReadCharacter(characterFile.name);
-            model = _temp.model;
-            startState = model.modifiers;
-            enchantment = _temp.enchantment;
-            moveset = _temp.moveset;
-            controls = ReadControls(controlsFile.name);
+        Player _temp = ReadCharacter(characterFile.name);
+        model = _temp.model;
+        enchantment = _temp.enchantment;
+        moveset = _temp.moveset;
+        controls = ReadControls(controlsFile.name);
+        startState = model.modifiers;
 
-            Spawn();
-        }
+        Spawn();
     }
 
     // Update is called once per frame
     void Update()
     {
         //Reduce frames remaining for all temporary modifications, then remove any that are expired
-        TickMods();
-        ApplyMods();
+        //TickMods();
+        //ApplyMods();
 
         //Reset animation speed when not running
         if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Run")) { anim.speed = 1; }
@@ -299,6 +296,7 @@ public class S_Player : MonoBehaviour
         box = gameObject.GetComponent<BoxCollider>();
 
         curState = startState;
+        stateMods = new List<PlayerModifier>(); if (GENERAL_DEBUG) { Debug.Log("statemods size: " + stateMods.Count); }
         mVert = 0;
         input = ActionType.none;
         anim.Play("Airborne");
@@ -368,27 +366,33 @@ public class S_Player : MonoBehaviour
     //Applies all currently stored modifications to the starting state
     public void ApplyMods()
     {
-        foreach(PlayerModifier _mod in stateMods)
+        if (stateMods.Count > 0)
         {
-            if (_mod.model != null) curState.color = _mod.color;
-            if (_mod.color != Color.gray) curState.color = _mod.color;
-            if (_mod.element != Element.Null) curState.element = _mod.element;
-            curState.size = startState.size + _mod.size;
-            curState.weight = startState.weight + _mod.weight;
-            curState.runSpeed = startState.runSpeed + _mod.runSpeed;
-            curState.gJumpSpeed = startState.gJumpSpeed + _mod.gJumpSpeed;
-            curState.aJumpSpeed = startState.aJumpSpeed + _mod.aJumpSpeed;
-            curState.aDrift = startState.aDrift + _mod.aDrift;
-            curState.fallSpeed = startState.fallSpeed + _mod.fallSpeed;
-            curState.maxJumps = startState.maxJumps + _mod.maxJumps;
-            curState.dps = startState.dps + _mod.dps;
+            foreach (PlayerModifier _mod in stateMods)
+            {
+                if (_mod.model != null) curState.color = _mod.color;
+                if (_mod.color != Color.gray) curState.color = _mod.color;
+                if (_mod.element != Element.Null) curState.element = _mod.element;
+                curState.size = startState.size + _mod.size;
+                curState.weight = startState.weight + _mod.weight;
+                curState.runSpeed = startState.runSpeed + _mod.runSpeed;
+                curState.gJumpSpeed = startState.gJumpSpeed + _mod.gJumpSpeed;
+                curState.aJumpSpeed = startState.aJumpSpeed + _mod.aJumpSpeed;
+                curState.aDrift = startState.aDrift + _mod.aDrift;
+                curState.fallSpeed = startState.fallSpeed + _mod.fallSpeed;
+                curState.maxJumps = startState.maxJumps + _mod.maxJumps;
+                curState.dps = startState.dps + _mod.dps;
+            }
         }
     }
     //
     public void TickMods()
     {
-        foreach (PlayerModifier _mod in stateMods) _mod.Tick(); //Iterate through all state modifiers and reduce all frame timers by 1
-        stateMods.RemoveAll(x => x.time == 0);                  //Purge all expired state modifiers
+        if (stateMods.Count > 0)
+        {
+            foreach (PlayerModifier _mod in stateMods) _mod.Tick(); //Iterate through all state modifiers and reduce all frame timers by 1
+            stateMods.RemoveAll(x => x.time == 0);                  //Purge all expired state modifiers
+        }
     }
     //
     public void ClearMods()

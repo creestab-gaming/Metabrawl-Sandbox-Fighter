@@ -1,9 +1,9 @@
 buffer= 6
 moveHorz= VirtualKB_LHorz
 moveVert= VirtualKB_LVert
-rStickUse= Move
-rHorz= VirtualKB_RHorz
-rVert= VirtualKB_RVert
+cStickUse= Move
+cHorz= VirtualKB_RHorz
+cVert= VirtualKB_RVert
 left= A
 right= D
 up= W
